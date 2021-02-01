@@ -1,11 +1,11 @@
-# LTOP-2_CPP
+# LTOP2_CPP
 
    By Mark Brandon and Immanuel Bissell of Yale University. 
    
  ![alt text](https://github.com/Icbissell/LTOP-2_CPP/blob/main/misc/Precipitation_Field.png)
 
 ## About
-   LTOP-2 is a general program to simulate the steady state precipitation field with orographic lifting over a user-defined topography. This repository contains the C++ scripts under 'LTOP-2_CPP' as well as a [CMake](https://cmake.org/) file with two examples (a simple Gaussian hill and a section of the Himalayan shelf) under 'LTOP-2_CMAKE'. Instructions for setting up the CMake script are included in its respective README file. 
+   LTOP2 is a general program to simulate the steady state precipitation field with orographic lifting over a user-defined topography. This repository contains the C++ scripts under 'LTOP2_CPP' as well as a [CMake](https://cmake.org/) file with two examples (a simple Gaussian hill and a section of the Himalayan shelf) under 'LTOP2_CMAKE'. Instructions for setting up the CMake script are included in its respective README file. 
    In order to run the example usage program with CMake, you must have cmake on your machine, which can be installed on Linux with:
 	
 	 sudo apt-get install cmake 
@@ -33,6 +33,6 @@ Plots are generated internally using the open-source [Gnuplot](http://www.gnuplo
 ## Abstract
    
 ## Getting the code
-   You can download both the CMake file and LTOP-2 source files by navigating to your desired folder and running:
+   You can download both the CMake file and LTOP2 source files by navigating to your desired folder and running:
    
-         git clone https://github.com/Icbissell/LTOP-2_CPP.git 
+         git clone https://github.com/Icbissell/LTOP2_CPP.git 
