@@ -17,14 +17,14 @@ int main()
     std::cout << "The max precipitation (m/a) is : " << gridMap.mostPrec_ma << std::endl;
     std::cout << "The max precipitation (mm/hr) is : " << gridMap.mostPrec_mmhr << std::endl;
     std::cout << "\n------------------------------------------------------ \n";
-    std::cout << "          Solutions saved to LTOP-2.txt file" << std::endl;
+    std::cout << "          Solutions saved to LTOP2.txt file" << std::endl;
 
     /* Make plots */
 
     gridMap.make_plots();
 
     std::ofstream LTOP2Stats;
-    LTOP2Stats.open("LTOP-2.txt");
+    LTOP2Stats.open("LTOP2.txt");
     LTOP2Stats << "Program runtime: " << runTime << " ms \n";
     LTOP2Stats << "--------------------------- Topography File --------------------------- \n";
     LTOP2Stats << "Grid dimensions nX and nY: " << gridMap.n0 << ", " << gridMap.n1 << std::endl;

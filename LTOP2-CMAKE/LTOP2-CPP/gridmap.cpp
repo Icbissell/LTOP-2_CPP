@@ -90,7 +90,7 @@ GridMap::~GridMap() {
 void GridMap::get_input(){
 
     /* Fill in topography grid */
-    std::string topoPath = "LTOP-2-CPP/himilaya.csv"; // link topography DEM here (square)
+    std::string topoPath = "LTOP2-CPP/himilaya.csv"; // link topography DEM here (square)
     std::ifstream inGrid(topoPath);
     std::string line, field;
 
@@ -784,7 +784,7 @@ void GridMap::make_plots(){
     Gnuplot gp1;
     gp1 << "set view map \n";
     gp1 << "set title 'Topography' \n";
-    gp1 << "load 'LTOP-2-CPP/parula.pal' \n";
+    gp1 << "load 'LTOP2-CPP/parula.pal' \n";
     gp1 << "splot" << gp1.file1d(gridVec) << "matrix with image \n";
     gp1 << "set term postscript \n";
     gp1 << "set output 'Topography.ps' \n";
@@ -808,7 +808,7 @@ void GridMap::make_plots(){
     Gnuplot gp2;
     gp2 << "set view map \n";
     gp2 << "set title 'Precipitation with Moisture Balance(m/a)' \n";
-    gp2 << "load 'LTOP-2-CPP/parula.pal' \n";
+    gp2 << "load 'LTOP2-CPP/parula.pal' \n";
     gp2 << "splot" << gp2.file1d(precVec) << "matrix with image \n";
     gp2 << "set term postscript \n";
     gp2 << "set output 'Precipitation_Grid.ps' \n";

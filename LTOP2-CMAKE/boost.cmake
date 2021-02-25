@@ -9,7 +9,7 @@ file( MAKE_DIRECTORY ${boost_INCLUDE_DIR} )
 
 ExternalProject_Add( external_boost
         PREFIX boost
-		  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/LTOP-2-CPP/boost_1_73_0
+		  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/LTOP2-CPP/boost_1_73_0
         BUILD_IN_SOURCE 1
         CONFIGURE_COMMAND find . -name "*.sh" | xargs chmod a+x && ./bootstrap.sh
             --with-libraries=filesystem
