@@ -10,6 +10,7 @@ int main()
     start = std::clock();
 
     GridMap gridMap(azimuth);
+    //gridMap.calc_fc(); //uncomment this line if latitude and longitude arrays are included and Coriolis effects are desired.
 
     gridMap.LTOP_calc();
     double runTime =  (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
@@ -52,3 +53,4 @@ int main()
 
     return 0;
 }
+

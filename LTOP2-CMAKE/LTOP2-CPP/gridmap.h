@@ -23,12 +23,13 @@ class GridMap
 {
 public:
 
-    const double g = 9.81; //
+    const double g = 9.81; //constant acceleration due to gravity
     const double TC2K = 273.15; //conversion from Celsius to Kelvin, [K]
     const double U = 10.0; //wind speed
     const double EPS = 2.2204e-16; //machine epsilon
     const double kappa = 0.0; //eddy diffusion (m/s^2)
     const double radiusEarth = 6371e3;
+    const double omega = 7.2921e-5; //rotation rate of earth
     double azimuth = 90; //wind azimuth degrees
     double tauC = 1000.0;  //characteristic time for cloud water, [s]
     double tauF = 1000.0;  //characteristic time for precipitation fallout, [s]
@@ -42,7 +43,6 @@ public:
     double gammaRatio; //ratio of gammaSat/gammaEnv
     double hV; //scale height for saturated vapor (scalar, m)
     double rho0; //total air density at z=0 (scalar, kg/m^3)
-    double mPerDegree = M_PI*radiusEarth/180.; //Meters per arc degree for the Earth's surface
     double fP = 0.97; //fraction of precipitation leaving the model
 
     /*Convert needed variables to complex for later calculations */
@@ -63,15 +63,14 @@ public:
     int tLength; //dimension of azimuth transfomed topography
     int nSPad; //padded dimension of azimuth transfomed topography
     int nTPad; //padded dimension of azimuth transfomed topography
-    int stRowLength;
-    int padstRowLength;
+    int stRowLength; //total elements in sLength * tLength array
+    int padstRowLength; //total elements in nSPad * nTPad array
     double dX; //node spacing on grid in x-direction
     double dY; //node spacing on grid in y-direction
     double dkS; //spacing of kS wavenumber
     double dkT; //spacing of kT wavenumber
     double dS; //node spacing on grid in s-direction
     double dT; //node spacing on grid in t-direction
-    double dSigma;
     double mostPrec;
     double mostPrec_ma; //maximum precipitation in meters/year
     double mostPrec_mmhr; //maximum precipitation in mm/hr
@@ -85,7 +84,7 @@ public:
     double *Xst; //x coordinates in st frame of reference
     double *Yst; //y coordinates in st frame of reference
     double *T; //temperature profile
-    double *zBar; //
+    double *zBar; //height of isosurface relative to topography
     double *gammaSatArr; //saturated lapse rate profile
     double *gammaEnvArr; //environmental lapse rate profile
     double **pWind; //precipitation grid in wind frame of reference
@@ -95,48 +94,50 @@ public:
 
     std::vector<double> s; //s coordinates
     std::vector<double> t; //t coordinates
+    std::vector<double> denominator; //denominators of vertical wavenumbers
     std::vector<std::vector<double>> topoVec; //vector for transfering topography
     std::vector<std::complex<double>> kZ; //wavenumbers in Z(vertical) direction
     std::vector<std::complex<double>> hHatPair;
-    std::vector<std::complex<double>> denominator; //denominators of vertical wavenumbers
-    std::vector<std::complex<double>> GVHat;
-    std::vector<std::complex<double>> GCHat;
-    std::vector<std::complex<double>> GFHat;
-    std::vector<double> pStarWindVec;
-    std::vector<double> QFStarWindVec;
-    std::vector<double> QCStarWindVec;
-    std::vector<double> latVec;
-    std::vector<double> lonVec;
+    std::vector<std::complex<double>> GVHat; //conversion from water vapor to cloud water
+    std::vector<std::complex<double>> GCHat; //transport and release of cloudwater
+    std::vector<std::complex<double>> GFHat; //the fall of precipitation to the ground
+    std::vector<double> pStarWindVec; //reduced precitation (no moisture balance)
+    std::vector<double> QFStarWindVec; //column density for falling precipitation
+    std::vector<double> QCStarWindVec; //column density for cloud water
 
-    fftw_complex *hHat; /* globally used Fourier transform of topography */
+    fftw_complex *hHat; //globally used Fourier transform of topography
 
-    fftw_plan plan_r2c, plan_c2r;  /* plans for fourier transforms */
+    fftw_plan plan_r2c, plan_c2r;  //plans for fourier transforms
 
-    GridMap(double azimuth); // constructor
+    GridMap(double azimuth); //constructor
 
-    ~GridMap(); // destructor
+    ~GridMap(); //destructor
 
-    void get_input();
+    void get_input(); //read topography from the .csv file
 
-    void fill_base_state(double Ns, double T0); /* add constants and profiles calculated in farfield.h to gridmap class*/
+    void calc_fc(); //calculate Coriolis frequency from latitude and longitude arrays
 
-    void calc_tauF(); /* calculation of time constant for fallout */
+    void fill_base_state(double Ns, double T0); //add constants and profiles calculated in farfield.h to gridmap class
 
-    void fill_grid_topo(); /* fill grid with topographical values from DEM file */
+    void calc_tauF(); /* calculation of time constant for fallout. Invokes a calculation of the 258 K isosurface, which
+                        marks the midpoint of the 268 - 248 K range for freezing in the atmosphere
+                        (WBF zone, Cias and Jouzel, 1994).*/
+
+    void fill_grid_topo(); //fill grid with topographical values from DEM file
 
     void interp_axes(int xsize, int ysize, double angle); /* calculates axes (s,t,x,y) and coordinates (Xst, Yst, Sxy, Txy) for original and rotated topography
                                                             as well as grid spacing dS and dT */
-    void rotate(); /* rotates topography by azimuth */
+    void rotate(); //rotates topography by azimuth
 
-    void reverse_rotation(double** inGrid, double** outGrid); /* rotates topography back to original orientation */
+    void reverse_rotation(double** inGrid, double** outGrid); //rotates topography back to original orientation
 
-    void fill_waveNumber(); /* calculates kT and kS wavenumbers */
+    void fill_waveNumber(); //calculates kT and kS wavenumbers
 
-    void topo_to_wave_domain(); /* converts Topography into fourier space/ wave domain */
+    void topo_to_wave_domain(); //converts Topography into fourier space/ wave domain
 
-    void treat_singularities(); /* treats singularities caused by abs(U*kS)==abs(fC) by setting the vertical velocities to 0 */
+    void treat_singularities(); //treats singularities caused by abs(U*kS)==abs(fC) by setting the vertical velocities to 0
 
-    void calc_kZ(); /* calculates the vertical wave number */
+    void calc_kZ(); //calculates the vertical wave number
 
     void calc_response_functions(); /* calculates three response functions, GVHat( conversion from water vapor to cloud water),
                                        GCHat(transport and release of cloud water), and GFHat(fall of hydrometeors to the ground) */
@@ -145,14 +146,15 @@ public:
                                     and column densities QPStarHat and QCStarHat in the wave domain, and transforms to space domain
                                     QPStarWindVec, pStarWindVec, and QCStarWindVec carry these values to next function*/
 
-    void final_prec_calc(); /* calculates precipitation rate in rotated frame of reference */
+    void final_prec_calc(); //calculates precipitation rate in rotated frame of reference
 
-    void calc_most(); /* calculate the maximum precipitation */
+    void calc_most(); //calculate the maximum precipitation
 
-    void LTOP_calc(); /* container function for LTOP Calculations */
+    void LTOP_calc(); //container function for LTOP Calculations
 
     void make_plots(); /* creates heat plots of topography and precipitation rate
                         using gnuplot and a gnuplot pipeline (gnuplot-iostream.h) */
 };
 
 #endif // GRIDMAP_H
+

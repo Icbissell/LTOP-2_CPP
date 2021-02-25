@@ -114,3 +114,4 @@ double mean1(std::vector <double> array, int size){
     return arrSum/size;
 
 }
+

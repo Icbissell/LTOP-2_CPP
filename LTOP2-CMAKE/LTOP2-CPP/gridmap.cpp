@@ -11,8 +11,8 @@ GridMap::GridMap(double azimuth)
     /* Grid-spacing dX and dY is set here to 1000m by default, but can
        be adjusted as desired */
 
-    dX = 1000;
-    dY = 1000;
+    dX = 1000; //grid spacing in x-direction
+    dY = 1000; //grid spacing in y-direction
 
     nXPad = 2*n0;
     nYPad = 2*n1;
@@ -86,7 +86,6 @@ GridMap::~GridMap() {
     delete[] pWind;
 }
 
-
 void GridMap::get_input(){
 
     /* Fill in topography grid */
@@ -134,9 +133,57 @@ void GridMap::get_input(){
 
 }
 
+void GridMap::calc_fc(){
+
+    /* Declare arrays */
+    std::vector<double> latVec;
+    std::vector<double> lonVec;
+    std::string line, field;
+
+    /* Fill in latitude array */
+    std::ifstream inLat("LTOP2-CPP/lat.csv"); //link to latitude file here
+    while (getline(inLat,line)){
+        std::vector<std::string> v;
+        std::stringstream ss(line);
+
+        while (getline(ss,field,','))
+        {
+            v.push_back(field);
+        }
+
+        int vSize = v.size();
+        for(int i = 0; i < vSize; i ++){
+            latVec.push_back(std::stod(v[i]));
+        }
+    }
+
+    /* Fill in longitude array */
+    std::ifstream inLon("LTOP2-CPP/lon.csv"); //link to longitude file here
+    while (getline(inLon,line)){
+        std::vector<std::string> v;
+        std::stringstream ss(line);
+
+        while (getline(ss,field,','))
+        {
+            v.push_back(field);
+        }
+
+        int vSize = v.size();
+        for(int i = 0; i < vSize; i ++){
+            lonVec.push_back(std::stod(v[i]));
+        }
+    }
+
+    /* Calculate Coriolis frequency at centroid of latitudes */
+    double latC = mean1(latVec, latVec.size());
+    fC = 2*omega*sind(latC);
+
+}
+
 
 void GridMap::fill_base_state(double Ns, double T0){
 
+    /* Transfer variables calculated in base_state to main class */
     FarField FarField(Ns, T0);
     FarField.base_state();
 
@@ -158,10 +205,12 @@ void GridMap::fill_base_state(double Ns, double T0){
         gammaEnvArr[i] = FarField.gammaEnv[i];
         T[i] = FarField.T[i];
     }
+
 }
 
 void GridMap::calc_tauF(){
 
+    /* Base-state elevation of specified isotherm temperature (258 in this case) */
     LinearInterp zBarInt(T, zBar, n);
     double zBar258 = zBarInt.interp(258);
 
@@ -175,17 +224,20 @@ void GridMap::calc_tauF(){
     LinearInterp gammaSatInt(zBar, gammaSatArr, n);
     double gammaSatBar258 = gammaSatInt.interp(zBar258);
 
+    /* Calculate perturbation height, zHat, for the zBar258 stream surface */
     std::complex<double> *zHat = new std::complex<double>[padstRowLength];
 
     for (int i = 0; i < padstRowLength; i++){
-        zHat[i] = std::complex<double>(hHat[i][REAL], hHat[i][IMAG])*exp((img*kZ[i]+comp_one/(2*hRho))*zBar258);
+        zHat[i] = std::complex<double>(hHat[i][REAL], hHat[i][IMAG])*std::exp((img*kZ[i]+comp_one/(2*hRho))*zBar258);
     }
 
     zHat[0] = 0;
 
+    /* Allocate arrays*/
     fftw_complex *zPrimeHat = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * 4 * bigRowLength);
     fftw_complex *zPrime = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * 4 * bigRowLength);
 
+    /* Convert to fftw form */
     for (int i = 0; i < padstRowLength; i++){
         zPrimeHat[i][REAL] = real(zHat[i]);
         zPrimeHat[i][IMAG] = imag(zHat[i]);
@@ -193,8 +245,10 @@ void GridMap::calc_tauF(){
 
     delete[] zHat;
 
+    /* Inverse Fourier transform perturbation height */
     ifft(nSPad, nTPad, zPrimeHat, zPrime);
 
+    /* Deallocate array*/
     fftw_free(zPrimeHat);
 
     std::vector<double> zPrimeVec;
@@ -210,7 +264,10 @@ void GridMap::calc_tauF(){
         }
     }
 
+    /* Deallocate array*/
     fftw_free(zPrime);
+
+    /* Allocate array for 258 isosurface */
     double *z258 = new double[stRowLength];
 
     for (int i = 0; i < stRowLength; i++){
@@ -244,6 +301,7 @@ void GridMap::calc_tauF(){
 
     tauF = mean1(tauFVec, stRowLength);
 
+    /* Deallocate array*/
     delete[] z258;
 }
 
@@ -295,6 +353,7 @@ void GridMap::interp_axes(int xsize, int ysize, double angle){
     delete[] xCoord;
     delete[] yCoord;
 
+    /* Find maximum and minimum values of s and t vectors */
     double sMin = find_max_min(Sxy, "min", rowLength);
     double sMax = find_max_min(Sxy, "max", rowLength);
     double tMin = find_max_min(Txy, "min", rowLength);
@@ -540,7 +599,7 @@ void GridMap::treat_singularities(){
 void GridMap::calc_kZ(){
 
     /* Declare vector with filled squares of vertical wave numbers */
-    std::vector<std::complex <double>> kZ2 (padstRowLength);
+    std::vector<double> kZ2 (padstRowLength);
 
     /* Set size of kZ vector */
     kZ.reserve(padstRowLength);
@@ -552,10 +611,10 @@ void GridMap::calc_kZ(){
     for (int i = 0; i < nSPad; i++){
         for (int j = 0; j < nTPad; j++){
             int indx = i*nTPad+j;
-            kZ2[indx] = std::complex<double>(pow(kS[i],2.) + pow(kT[j],2.),0)*((pow(Ns,2.) - pow(U*kS[i],2.))/denominator[indx]) - 1./(4.*pow(hRho,2.)); //check in on complex double part
-            kZ[indx] = sqrt(kZ2[indx]);
+            kZ2[indx] = (pow(kS[i],2.) + pow(kT[j],2.))*((pow(Ns,2.) - pow(U*kS[i],2.))/denominator[indx]) - 1./(4.*pow(hRho,2.)); //check in on complex double part
+            kZ[indx] = sqrt(std::complex<double>(kZ2[indx],0));
 
-            if((real(kZ2[indx]) > 0) && (kS[i] < 0)){
+            if((kZ2[indx] > 0) && (kS[i] < 0)){
                 kZ[indx] = -kZ[indx];
             }
         }
@@ -575,6 +634,7 @@ void GridMap::calc_response_functions(){
         hHatPair[i] = std::complex<double>(hHat[i][REAL], hHat[i][IMAG]);
     }
 
+    /* Deallocate array */
     fftw_free(hHat);
 
     /* Populate values of three response functions: GVHat, GCHat, GFHat */
@@ -646,6 +706,12 @@ void GridMap::convolution_functions(){
 
         }
     }
+
+
+    /* Assure that precipitation values and column densities are positive. Though negative precipitation values
+       are nevertheless real, also known as evaporation, this model neglects its effects. This is justified as 1)
+       this model is intended to calculate the orographic precipitation field, not evaporation field, and 2) there
+       are no sources from which evaporation would draw from e.g. ponds, lakes, vegetation. */
 
     for (int i = 0; i < stRowLength; i++){
 
@@ -823,3 +889,4 @@ void GridMap::make_plots(){
 
 
 }
+

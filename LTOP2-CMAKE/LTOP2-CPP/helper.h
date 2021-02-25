@@ -22,6 +22,7 @@ double find_max_min_2d(double **inarray, std::string choice, int xsize, int ysiz
 
 void cum_trapz_integrate(double **arr, double **int_sum, int xsize, int ysize); //calculates the trapezoidal integration down the rows of a matrix (compare to MatLab's cumtrapz)
 
-double mean1(std::vector <double> array, int size);
+double mean1(std::vector <double> array, int size); //find the arithmetic mean of a vector
 
 #endif // HELPER_H
+

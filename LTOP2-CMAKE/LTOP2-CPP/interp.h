@@ -3,32 +3,28 @@
 #include <cmath>
 #include <iostream>
 
-class BaseInterp
+class Interp
 {
 public:
-    int n, mm, jsav, cor, dj;
-    double *xArray, *yArray;
+    int n, mm, jsav, corSearch, dj;
+    double *xArray, *yArray; //x index vector and y vector to be interpolated on
 
-    BaseInterp();
-    BaseInterp(double *xArray, double *yArray, int m, int arrSize);
+    Interp();
+    Interp(double *xArray, double *yArray, int m, int arrSize);
 
-    double interp(double x);
+    double interp(double x); //decide which bracketing algorithm to use and interpolate on found bracket.
+    int search(double x); //find j such that x is bracketed in indices [j] -[j+mm-1]
+    int track(double x); //find j such that x is bracketed in indices [j] -[j+mm-1], using correlated search
 
-    int locate(double x);
-
-    int hunt(double x);
-
-    double virtual rawInterp(int jlo, double x) = 0;
+    double virtual primInterp(int offSet, double x) = 0; //primitive linear interpolation method
 };
 
-class LinearInterp : public BaseInterp
+class LinearInterp : public Interp
 {
 
 public:
-    LinearInterp(double *xArray, double *yArray, int arrSize);
-
-    double rawInterp(int j, double x);
-
+    LinearInterp(double *xArray, double *yArray, int arrSize); //Linear interpolation
+    double primInterp(int j, double x);
 };
 
 /* BilinInterp takes as inputs size of x dimension, size of y dimension, equally spaced x axis array,
@@ -37,14 +33,15 @@ public:
 class BilinInterp
 {
 public:
-    int m,n;
-    double **yMatrix;
-    LinearInterp x1terp, x2terp;
-    BilinInterp(double x1Size, double x2Size, double *x1Array, double *x2Array, double **yMatrix);
+    int m,n; //dimensions of matrix
+    double **yMatrix; //matrix to be interpolated
+    LinearInterp interpx1, interpx2; //axes for indexing
+    BilinInterp(double x1Size, double x2Size, double *x1Array, double *x2Array, double **yMatrix); //bilinear interpolation object
 
-    double interp(double x1p, double x2p);
+    double interp(double x1p, double x2p); //interpolation function, takes as input point in x and y dimension
 };
 
 
 #endif // INTERP_1D_H
+
 
