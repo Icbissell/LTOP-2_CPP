@@ -361,3 +361,4 @@ double FarField::brack_and_find(double guess, int indx){
     decker_brent(x1, x2, 1e-7, indx);
     return root;
 }
+

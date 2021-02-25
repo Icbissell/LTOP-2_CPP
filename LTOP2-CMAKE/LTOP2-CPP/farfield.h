@@ -45,8 +45,8 @@ private:
     int n = round(zMax/dZ) + 1;
 
     std::vector<double> p; //environmental density profile (vector)
-    std::vector<double> rhoS;
-    std::vector<double> rS;
+    std::vector<double> rhoS; //saturated density vapor profile
+    std::vector<double> rS; //saturated mixing ratio (vapor mass/dry air mass)
 
 
     double fDiff(double gammaEnvEst, int indx); //define nested function for numerically solving for gammaEnv
@@ -68,3 +68,4 @@ private:
 
 
 #endif // FARFIELD_H
+
