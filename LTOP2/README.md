@@ -10,6 +10,6 @@ These are the source files for LTOP2, a program for modeling the steady-state or
 * [FFTW3](http://www.fftw.org/) is used in all the necessary Fourier transforms. 
 
 
-The topography source file is formatted as a .csv file (see examples in the topo folder in repository). This file and, if Coriolis effects are desired, latitude and longitude files are linked in 'gridmap.cpp' under the get_input() and calc_fc() functions, respectively. 
+The topography source file is formatted as a .csv file (see examples in the topo_source folder in repository). This file and, if Coriolis effects are desired, latitude and longitude files are linked in 'gridmap.cpp' under the get_input() and calc_fc() functions, respectively. 
 
 
